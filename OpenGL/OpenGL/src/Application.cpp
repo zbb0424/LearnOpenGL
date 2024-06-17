@@ -7,8 +7,11 @@
 #include <sstream>
 
 #include "Renderer.h"
+
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "VertexArray.h"
+
 
 struct ShaderProgramSource
 {
@@ -110,11 +113,11 @@ int main(void)
 	}
 
 	/* Make the window's context current */
-	glfwMakeContextCurrent(window); 
+	glfwMakeContextCurrent(window);
 
 	if (glewInit() != GLEW_OK)
 		std::cout << "Error!" << std::endl;
-	
+
 	std::cout << glGetString(GL_VERSION) << std::endl;
 	{
 		float positions[] = {
@@ -129,24 +132,19 @@ int main(void)
 			2,3,0
 		};
 
-		unsigned int VAO;
-		GLCall(glGenVertexArrays(1, &VAO));
-		GLCall(glBindVertexArray(VAO));
+		VertexArray VAO;
+		VertexBuffer VBO(positions, 4 * 2 * sizeof(float));/*复制顶点数组到缓冲中供OpengGL使用*/
 
-		/*复制顶点数组到缓冲中供OpengGL使用*/
-		VertexBuffer VBO(positions, 4 * 2 * sizeof(float));
-
-		/*设置顶点属性指针*/
-		GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0));//0为position 给VAO指定一个顶点布局
-		GLCall(glEnableVertexAttribArray(0));//enable启用0
+		VertexBufferLayout layout;
+		layout.Push<float>(2);
+		VAO.AddBuffer(VBO, layout);
 
 		IndexBuffer IBO(indices, 6);
 
 		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 
-		/*使用shader程序*/
-		GLCall(glUseProgram(shader));
+		GLCall(glUseProgram(shader));/*使用shader程序*/
 
 		/*uniform是全局的，是有别于顶点属性的另一种从cpu传递数据到gpu上的着色器的方式*/
 		GLCall(int location = glGetUniformLocation(shader, "u_Color"));
@@ -170,7 +168,7 @@ int main(void)
 			GLCall(glUseProgram(shader));//重新启用shader
 			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-			GLCall(glBindVertexArray(VAO));
+			VAO.Bind();
 			IBO.Bind();
 
 			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
