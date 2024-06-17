@@ -3,8 +3,6 @@
 #include <vector>
 #include "Renderer.h"
 
-
-
 struct VertexBufferElement
 {
 	unsigned int type;
@@ -37,6 +35,7 @@ public:
 	template<typename T>
 	void Push(unsigned int count)
 	{
+		std::cout << "ÀàÐÍ´íÎó" << std::endl;
 		ASSERT(false);
 	}
 
